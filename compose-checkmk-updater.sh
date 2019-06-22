@@ -18,6 +18,7 @@ updateprocess()
 	cp -r $file_dir $backup_dir
 	docker container run -t -d --rm --volumes-from $container_name --name checkmk_update checkmk/check-mk-raw:$new_version bash
 	docker cp -L checkmk:/omd/versions/default - | docker cp - checkmk_update:/omd/versions/
+	docker-compose down
 	docker exec -it -u cmk checkmk_update omd update
 	docker kill checkmk_update
 }
@@ -26,7 +27,7 @@ updateprocess()
 compose_replace()
 {
 sed -i s/$current_version/$new_version/g docker-compose.yml
-docker-compose down && docker-compose up -d
+docker-compose up -d
 }
 
 #check if container has new version

@@ -34,25 +34,53 @@ docker-compose up -d
 check()
 {
 	if docker ps | grep "$new_version" ;
-		then
-			echo
-			echo "Update successful."
-			echo
-		else
-			echo "Something went wrong."
-			exit 0
-		fi
+	then
+		echo
+		echo "Update successful."
+		echo
+	else
+		echo "Something went wrong."
+		exit 0
+	fi
 }
 
-if docker ps | grep "$new_version" ;
-        then
-                echo "Version already in use."
+#delete old docker images to save space
+cleanup()
+{
+	while [ -z $choice ]
+	do
+		read -p "Delete old image? ($current_version) | y/n: " choice
+	done
+
+	if [[ $choice == "y" ]];
+	then
+		echo
+		docker image rm $(docker image ls | grep "$current_version" | awk '{print $3}')
+	else
+		echo
+		echo "Not deleting image."
 		exit 0
-        else
-		echo "Versioncheck done, beginning update."
-		updateprocess
-		compose_replace
-		check
 	fi
 
+	if docker image ls | grep "$current_version" ;
+	then 
+		echo
+		echo "Something went wrong while deleting the old image."
+	else
+		echo
+		echo "Image has been deleted."
+	fi
+}
 
+
+if docker ps | grep "$new_version" ;
+then
+	echo "Version already in use."
+	exit 0
+else
+	echo "Versioncheck done, beginning update."
+	updateprocess
+	compose_replace
+	check
+	cleanup
+fi
